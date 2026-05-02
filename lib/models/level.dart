@@ -1,3 +1,5 @@
+// FIX: Added missing import — Offset is defined in dart:ui (re-exported by flutter/material.dart)
+import 'package:flutter/material.dart';
 import 'package:zen_garden_jam_flutter/models/puzzle_element.dart';
 
 class Level {
@@ -68,7 +70,7 @@ class Level {
 
   int calculateScore(int movesUsed, int timeRemaining) {
     int score = targetPetals;
-    
+
     // Bonus for using fewer moves
     if (movesUsed < maxMoves) {
       score += (maxMoves - movesUsed) * 5;

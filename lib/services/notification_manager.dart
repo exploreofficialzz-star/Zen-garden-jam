@@ -43,17 +43,19 @@ class NotificationManager {
         );
   }
 
+  // FIX: Replaced removed `Time` type with plain int hour & minute parameters
   Future<void> scheduleDailyNotification({
     required int id,
     required String title,
     required String body,
-    required Time time,
+    required int hour,
+    required int minute,
   }) async {
     await _flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
-      _nextInstanceOfTime(time),
+      _nextInstanceOfTime(hour, minute),
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'zen_garden_daily',
@@ -69,7 +71,8 @@ class NotificationManager {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAndAllowWhileIdle,
+      // FIX: exactAndAllowWhileIdle renamed to exactAllowWhileIdle in v17
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -103,15 +106,16 @@ class NotificationManager {
     );
   }
 
-  tz.TZDateTime _nextInstanceOfTime(Time time) {
+  // FIX: Updated signature to match new int hour/minute parameters
+  tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
     tz.TZDateTime scheduledDate = tz.TZDateTime(
       tz.local,
       now.year,
       now.month,
       now.day,
-      time.hour,
-      time.minute,
+      hour,
+      minute,
     );
 
     if (scheduledDate.isBefore(now)) {

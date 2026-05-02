@@ -72,7 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       _StatCard(
                         title: 'Petals',
                         value: gameState.totalPetals.toString(),
-                        icon: Icons.flower,
+                        // FIX: Icons.flower does not exist → replaced with Icons.local_florist
+                        icon: Icons.local_florist,
                       ),
                       _StatCard(
                         title: 'Streak',
