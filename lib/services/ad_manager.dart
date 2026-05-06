@@ -1,4 +1,5 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:flutter/foundation.dart';
 
 class AdManager {
   static final AdManager _instance = AdManager._internal();
@@ -13,10 +14,32 @@ class AdManager {
   InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
 
-  // Test Ad Unit IDs (replace with real IDs for production)
-  static const String bannerAdUnitId = 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy';
-  static const String interstitialAdUnitId = 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy';
-  static const String rewardedAdUnitId = 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy';
+  // FIX: Replaced invalid 'xxxxxxxx' placeholders with official Google test IDs.
+  // These work immediately without an AdMob account.
+  // Replace with your real IDs from the ADMOB secrets when ready for production.
+  static String get bannerAdUnitId {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'ca-app-pub-3940256099942544/6300978111';
+    } else {
+      return 'ca-app-pub-3940256099942544/2934735716';
+    }
+  }
+
+  static String get interstitialAdUnitId {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'ca-app-pub-3940256099942544/1033173712';
+    } else {
+      return 'ca-app-pub-3940256099942544/4411468910';
+    }
+  }
+
+  static String get rewardedAdUnitId {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'ca-app-pub-3940256099942544/5224354917';
+    } else {
+      return 'ca-app-pub-3940256099942544/1712485313';
+    }
+  }
 
   Future<void> initialize() async {
     await MobileAds.instance.initialize();
@@ -28,12 +51,11 @@ class AdManager {
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          print('Banner Ad loaded');
-        },
+        onAdLoaded: (ad) => debugPrint('Banner Ad loaded'),
         onAdFailedToLoad: (ad, error) {
-          print('Banner Ad failed to load: $error');
+          debugPrint('Banner Ad failed: $error');
           ad.dispose();
+          _bannerAd = null;
         },
       ),
     )..load();
@@ -46,30 +68,29 @@ class AdManager {
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
           _interstitialAd = ad;
-          print('Interstitial Ad loaded');
+          debugPrint('Interstitial Ad loaded');
         },
         onAdFailedToLoad: (error) {
-          print('Interstitial Ad failed to load: $error');
+          debugPrint('Interstitial Ad failed: $error');
         },
       ),
     );
   }
 
   void showInterstitialAd() {
-    if (_interstitialAd != null) {
-      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (ad) {
-          ad.dispose();
-          loadInterstitialAd();
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          ad.dispose();
-          loadInterstitialAd();
-        },
-      );
-      _interstitialAd!.show();
-      _interstitialAd = null;
-    }
+    if (_interstitialAd == null) return;
+    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        loadInterstitialAd();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+        loadInterstitialAd();
+      },
+    );
+    _interstitialAd!.show();
+    _interstitialAd = null;
   }
 
   void loadRewardedAd() {
@@ -79,34 +100,31 @@ class AdManager {
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (ad) {
           _rewardedAd = ad;
-          print('Rewarded Ad loaded');
+          debugPrint('Rewarded Ad loaded');
         },
         onAdFailedToLoad: (error) {
-          print('Rewarded Ad failed to load: $error');
+          debugPrint('Rewarded Ad failed: $error');
         },
       ),
     );
   }
 
   void showRewardedAd(Function(RewardItem) onRewardEarned) {
-    if (_rewardedAd != null) {
-      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
-        onAdDismissedFullScreenContent: (ad) {
-          ad.dispose();
-          loadRewardedAd();
-        },
-        onAdFailedToShowFullScreenContent: (ad, error) {
-          ad.dispose();
-          loadRewardedAd();
-        },
-      );
-      _rewardedAd!.show(
-        onUserEarnedReward: (ad, reward) {
-          onRewardEarned(reward);
-        },
-      );
-      _rewardedAd = null;
-    }
+    if (_rewardedAd == null) return;
+    _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (ad) {
+        ad.dispose();
+        loadRewardedAd();
+      },
+      onAdFailedToShowFullScreenContent: (ad, error) {
+        ad.dispose();
+        loadRewardedAd();
+      },
+    );
+    _rewardedAd!.show(
+      onUserEarnedReward: (ad, reward) => onRewardEarned(reward),
+    );
+    _rewardedAd = null;
   }
 
   BannerAd? get bannerAd => _bannerAd;

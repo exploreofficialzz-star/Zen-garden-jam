@@ -1,12 +1,15 @@
-import java.util.Properties
-import java.io.FileInputStream
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+import java.io.FileInputStream
+
+// Load key.properties if it exists (local builds)
+// In CI, environment variables are used directly via the workflow
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
@@ -19,7 +22,7 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // Required by flutter_local_notifications
+        // Required by flutter_local_notifications for Java 8+ API support on older Android versions
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -31,6 +34,8 @@ android {
 
     signingConfigs {
         create("release") {
+            // CI: read from environment variables injected by GitHub Actions
+            // Local: read from android/key.properties file
             keyAlias = keystoreProperties["keyAlias"] as String?
                 ?: System.getenv("ANDROID_KEY_ALIAS")
             keyPassword = keystoreProperties["keyPassword"] as String?
@@ -45,13 +50,13 @@ android {
 
     defaultConfig {
         applicationId = "com.chastechgroup.zengardenjam"
-        minSdk = 21  // Required for google_mobile_ads
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // Falls back to Google test AdMob ID — app will load but show test ads
-        // Replace by adding ADMOB_APP_ID_ANDROID to your GitHub secrets
+        // AdMob App ID — injected from GitHub secret ADMOB_APP_ID_ANDROID
+        // Add to your GitHub secrets when ready; placeholder used until then
         manifestPlaceholders["admobAppId"] =
             System.getenv("ADMOB_APP_ID_ANDROID") ?: "ca-app-pub-3940256099942544~3347511713"
     }
@@ -77,5 +82,6 @@ flutter {
 }
 
 dependencies {
+    // Required for isCoreLibraryDesugaringEnabled (flutter_local_notifications)
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

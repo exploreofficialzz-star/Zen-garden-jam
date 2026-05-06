@@ -8,24 +8,42 @@ import 'package:zen_garden_jam_flutter/screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize services
-  await AdManager().initialize();
-  await NotificationManager().initialize();
-  
-  runApp(const ZenGardenJamApp());
+
+  // FIX: Initialize GameState FIRST and AWAIT it before runApp.
+  // Previously `GameState()..initialize()` was fire-and-forget inside the
+  // Provider create callback — _prefs (late field) was unset when the first
+  // frame tried to read it, causing LateInitializationError crash.
+  final gameState = GameState();
+  await gameState.initialize();
+
+  // Initialize services — wrapped in try/catch so ad/notification failures
+  // never prevent the app from launching.
+  try {
+    await AdManager().initialize();
+  } catch (e) {
+    debugPrint('AdManager init failed: $e');
+  }
+
+  try {
+    await NotificationManager().initialize();
+  } catch (e) {
+    debugPrint('NotificationManager init failed: $e');
+  }
+
+  runApp(ZenGardenJamApp(gameState: gameState));
 }
 
 class ZenGardenJamApp extends StatelessWidget {
-  const ZenGardenJamApp({Key? key}) : super(key: key);
+  final GameState gameState;
+
+  const ZenGardenJamApp({Key? key, required this.gameState}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => GameState()..initialize(),
-        ),
+        // FIX: Pass the already-initialised instance instead of creating a new one.
+        ChangeNotifierProvider<GameState>.value(value: gameState),
       ],
       child: MaterialApp(
         title: 'Zen Garden Jam',
