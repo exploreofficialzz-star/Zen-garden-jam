@@ -1,37 +1,39 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:zen_garden_jam_flutter/providers/game_provider.dart';
-import 'package:zen_garden_jam_flutter/services/ad_manager.dart';
-import 'package:zen_garden_jam_flutter/services/notification_manager.dart';
 import 'package:zen_garden_jam_flutter/screens/splash_screen.dart';
 import 'package:zen_garden_jam_flutter/screens/home_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
+  // runZonedGuarded catches ANY uncaught error in the entire app zone —
+  // this prevents the OS "keeps stopping" dialog even if something throws.
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // FIX 1: Initialize AdMob FIRST — must happen before any ad calls.
-  // Wrapped in try/catch so an AdMob failure never prevents the app launching.
-  try {
-    await AdManager().initialize();
-  } catch (e) {
-    debugPrint('AdManager init error: $e');
-  }
+    // Catch Flutter framework errors (widget build exceptions etc.)
+    FlutterError.onError = (FlutterErrorDetails details) {
+      debugPrint('FlutterError: ${details.exceptionAsString()}');
+    };
 
-  // FIX 2: Fully AWAIT GameState.initialize() before calling runApp.
-  // Previously `GameState()..initialize()` inside the Provider create: callback
-  // was fire-and-forget. SplashScreen rendered instantly and accessed the `late`
-  // _prefs field before SharedPreferences.getInstance() had returned → LateInitializationError crash.
-  final gameState = GameState();
-  await gameState.initialize();
+    // FIX: Initialize timezone database — REQUIRED before any tz.TZDateTime
+    // or tz.local usage. flutter_local_notifications uses this internally.
+    // Missing this call causes "Invalid argument(s): Unexpected origin" crash.
+    tz.initializeTimeZones();
 
-  // Notifications — non-fatal if it fails
-  try {
-    await NotificationManager().initialize();
-  } catch (e) {
-    debugPrint('NotificationManager init error: $e');
-  }
+    // FIX: Only initialize GameState (pure Dart/SharedPreferences) before runApp.
+    // Plugin initializations (AdMob, Notifications) are deferred to SplashScreen
+    // so a platform plugin failure NEVER prevents the app from launching.
+    final gameState = GameState();
+    await gameState.initialize();
 
-  runApp(ZenGardenJamApp(gameState: gameState));
+    runApp(ZenGardenJamApp(gameState: gameState));
+  }, (error, stack) {
+    // Last-resort handler — logs errors instead of crashing
+    debugPrint('Uncaught error: $error');
+    debugPrint('Stack: $stack');
+  });
 }
 
 class ZenGardenJamApp extends StatelessWidget {
@@ -43,7 +45,6 @@ class ZenGardenJamApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // FIX 3: Provide the already-initialised instance, not a fresh one.
         ChangeNotifierProvider<GameState>.value(value: gameState),
       ],
       child: MaterialApp(

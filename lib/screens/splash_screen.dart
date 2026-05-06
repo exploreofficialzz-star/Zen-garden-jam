@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:zen_garden_jam_flutter/providers/game_provider.dart';
+import 'package:zen_garden_jam_flutter/services/ad_manager.dart';
+import 'package:zen_garden_jam_flutter/services/notification_manager.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -17,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -27,11 +28,33 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animationController.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    });
+    // FIX: Initialize platform plugins HERE (after Flutter engine is fully running)
+    // rather than blocking main(). If AdMob or notifications fail, the splash
+    // screen still shows and the app navigates normally.
+    _initServicesAndNavigate();
+  }
+
+  Future<void> _initServicesAndNavigate() async {
+    // Initialize AdMob — safe, won't crash the app if it fails
+    try {
+      await AdManager().initialize();
+    } catch (e) {
+      debugPrint('AdMob init failed (non-fatal): $e');
+    }
+
+    // Initialize notifications — safe, won't crash the app if it fails
+    try {
+      await NotificationManager().initialize();
+    } catch (e) {
+      debugPrint('Notifications init failed (non-fatal): $e');
+    }
+
+    // Wait for at least 3 seconds total splash duration
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 
   @override
@@ -50,14 +73,12 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Icon
               Image.asset(
                 'assets/images/app_icon.png',
                 width: 200,
                 height: 200,
               ),
               const SizedBox(height: 40),
-              // App Title
               const Text(
                 'Zen Garden Jam',
                 style: TextStyle(
@@ -68,7 +89,6 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              // Tagline
               const Text(
                 'Restore the garden, find your peace',
                 style: TextStyle(
@@ -78,12 +98,11 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
               const SizedBox(height: 60),
-              // Loading indicator
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9CAF88)),
+                valueColor:
+                    AlwaysStoppedAnimation<Color>(Color(0xFF9CAF88)),
               ),
               const SizedBox(height: 20),
-              // By chAs
               const Text(
                 'by chAs',
                 style: TextStyle(
