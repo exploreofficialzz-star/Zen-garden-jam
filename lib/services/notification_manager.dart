@@ -24,26 +24,20 @@ class NotificationManager {
       requestSoundPermission: true,
     );
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(
+    const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
     );
 
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings);
 
-    // Request permissions for iOS
     await _flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  // FIX: Replaced removed `Time` type with plain int hour & minute parameters
+  // FIX: Removed deleted `Time` type parameter — replaced with plain int hour & minute.
   Future<void> scheduleDailyNotification({
     required int id,
     required String title,
@@ -71,7 +65,7 @@ class NotificationManager {
           presentSound: true,
         ),
       ),
-      // FIX: exactAndAllowWhileIdle renamed to exactAllowWhileIdle in v17
+      // FIX: renamed from exactAndAllowWhileIdle in flutter_local_notifications v17
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
@@ -106,7 +100,7 @@ class NotificationManager {
     );
   }
 
-  // FIX: Updated signature to match new int hour/minute parameters
+  // FIX: Updated signature to int hour/minute matching the new scheduleDailyNotification params
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
     final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
     tz.TZDateTime scheduledDate = tz.TZDateTime(
@@ -117,11 +111,9 @@ class NotificationManager {
       hour,
       minute,
     );
-
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
-
     return scheduledDate;
   }
 

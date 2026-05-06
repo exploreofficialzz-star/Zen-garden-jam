@@ -2,12 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GameState with ChangeNotifier {
-  // FIX: Changed from `late SharedPreferences` to nullable.
-  // Previously any widget reading state before initialize() completed would
-  // throw LateInitializationError. Now all getters return safe defaults
-  // until _prefs is ready.
+  // FIX: `late SharedPreferences` → nullable.
+  // Any widget reading state before initialize() completes no longer crashes —
+  // all getters return safe default values until _prefs is assigned.
   SharedPreferences? _prefs;
-  bool _isInitialized = false;
 
   int _currentLevel = 1;
   int _totalPetals = 0;
@@ -26,13 +24,11 @@ class GameState with ChangeNotifier {
   int get totalPetals => _totalPetals;
   int get bonsaiGrowthStage => _bonsaiGrowthStage;
   int get dailyStreak => _dailyStreak;
-  bool get isInitialized => _isInitialized;
   Map<String, int> get gardenRestorationProgress => _gardenRestorationProgress;
 
   Future<void> initialize() async {
     _prefs = await SharedPreferences.getInstance();
     _loadGameState();
-    _isInitialized = true;
     notifyListeners();
   }
 
@@ -47,6 +43,8 @@ class GameState with ChangeNotifier {
 
     final lastPlayDateStr = p.getString('last_play_date');
     if (lastPlayDateStr != null && lastPlayDateStr.isNotEmpty) {
+      // FIX: try/catch — a malformed stored date string used to throw uncaught
+      // FormatException and crash the app on second launch.
       try {
         _lastPlayDate = DateTime.parse(lastPlayDateStr);
         _checkDailyStreak();

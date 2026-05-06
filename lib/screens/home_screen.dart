@@ -29,10 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
           return SingleChildScrollView(
             child: Column(
               children: [
-                // Header with background
                 Container(
                   height: 200,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     image: DecorationImage(
                       image: AssetImage('assets/images/game_background.png'),
                       fit: BoxFit.cover,
@@ -63,7 +62,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                // Stats Section
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Row(
@@ -72,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _StatCard(
                         title: 'Petals',
                         value: gameState.totalPetals.toString(),
-                        // FIX: Icons.flower does not exist → replaced with Icons.local_florist
+                        // FIX: Icons.flower does not exist in Flutter icon set
                         icon: Icons.local_florist,
                       ),
                       _StatCard(
@@ -89,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Main Play Button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: ElevatedButton(
@@ -102,10 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9CAF88),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 60,
-                        vertical: 16,
-                      ),
+                      minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -121,78 +115,48 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Secondary Buttons
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Row(
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            _showGardenScreen(context);
-                          },
+                          onPressed: () => _showGardenDialog(context),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFF9CAF88),
-                              width: 2,
-                            ),
+                            side: const BorderSide(color: Color(0xFF9CAF88), width: 2),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Garden',
-                            style: TextStyle(
-                              color: Color(0xFF9CAF88),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: const Text('Garden',
+                              style: TextStyle(color: Color(0xFF9CAF88), fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            _showSettingsDialog(context);
-                          },
+                          onPressed: () => _showSettingsDialog(context),
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Color(0xFF9CAF88),
-                              width: 2,
-                            ),
+                            side: const BorderSide(color: Color(0xFF9CAF88), width: 2),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Settings',
-                            style: TextStyle(
-                              color: Color(0xFF9CAF88),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: const Text('Settings',
+                              style: TextStyle(color: Color(0xFF9CAF88), fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
-                // Bonsai Display
-                Image.asset(
-                  'assets/images/bonsai_tree.png',
-                  width: 150,
-                  height: 150,
-                ),
+                Image.asset('assets/images/bonsai_tree.png', width: 150, height: 150),
                 const SizedBox(height: 16),
                 const Text(
                   'Your Daily Bonsai',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF7A8F6F),
-                    fontStyle: FontStyle.italic,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Color(0xFF7A8F6F), fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 40),
               ],
@@ -203,18 +167,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showGardenScreen(BuildContext context) {
+  void _showGardenDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Garden Restoration'),
         content: const Text('Your garden is being restored with each level completed!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
       ),
     );
   }
@@ -238,29 +197,18 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('About'),
               onTap: () {
                 Navigator.pop(context);
-                _showAboutDialog(context);
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('About'),
+                    content: const Text('Zen Garden Jam\nVersion 1.0.0\n\nby chAs'),
+                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+                  ),
+                );
               },
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About Zen Garden Jam'),
-        content: const Text(
-          'Zen Garden Jam\nVersion 1.0.0\n\nA hybrid-casual puzzle game with ASMR aesthetics.\n\nby chAs\n\nEnjoy the peace.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
@@ -271,11 +219,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
 
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-  });
+  const _StatCard({required this.title, required this.value, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -284,34 +228,15 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         children: [
           Icon(icon, color: const Color(0xFF9CAF88), size: 24),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D5016),
-            ),
-          ),
+          Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2D5016))),
           const SizedBox(height: 4),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF7A8F6F),
-            ),
-          ),
+          Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF7A8F6F))),
         ],
       ),
     );

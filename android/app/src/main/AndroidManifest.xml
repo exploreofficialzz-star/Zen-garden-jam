@@ -4,8 +4,7 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-        <!-- REQUIRED by google_mobile_ads — app CRASHES on launch without this  -->
-        <!-- Falls back to Google test ID; replace via ADMOB_APP_ID_ANDROID secret -->
+        <!-- REQUIRED by google_mobile_ads — missing this = instant crash on launch -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />

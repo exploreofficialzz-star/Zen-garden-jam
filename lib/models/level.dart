@@ -1,4 +1,5 @@
-// FIX: Added missing import — Offset is defined in dart:ui (re-exported by flutter/material.dart)
+// FIX: Added missing import — Offset lives in dart:ui, re-exported by flutter/material.dart.
+// Without this import `Offset(...)` was an unresolved symbol → compile error.
 import 'package:flutter/material.dart';
 import 'package:zen_garden_jam_flutter/models/puzzle_element.dart';
 
@@ -7,10 +8,10 @@ class Level {
   final String title;
   final String description;
   final int targetPetals;
-  final int timeLimit; // in seconds, 0 = no limit
+  final int timeLimit;
   final List<PuzzleElement> elements;
   final int maxMoves;
-  final String season; // spring, summer, autumn, winter
+  final String season;
 
   Level({
     required this.levelNumber,
@@ -24,7 +25,6 @@ class Level {
   });
 
   factory Level.generateLevel(int levelNumber) {
-    // Generate levels dynamically based on level number
     final difficulty = (levelNumber / 10).ceil();
     final elementCount = 5 + difficulty;
     final maxMoves = 20 + (difficulty * 2);
@@ -44,24 +44,21 @@ class Level {
       );
     }
 
-    final season = _getSeason(levelNumber);
-
     return Level(
       levelNumber: levelNumber,
       title: 'Garden Level $levelNumber',
-      description: 'Restore the $season garden by clearing all elements',
+      description: 'Restore the ${_getSeason(levelNumber)} garden',
       targetPetals: 50 + (levelNumber * 5),
-      timeLimit: 300 - (difficulty * 10), // Decreases with difficulty
+      timeLimit: 300 - (difficulty * 10),
       elements: elements,
       maxMoves: maxMoves,
-      season: season,
+      season: _getSeason(levelNumber),
     );
   }
 
   static String _getSeason(int levelNumber) {
-    final seasonIndex = ((levelNumber - 1) ~/ 50) % 4;
     const seasons = ['Spring', 'Summer', 'Autumn', 'Winter'];
-    return seasons[seasonIndex];
+    return seasons[((levelNumber - 1) ~/ 50) % 4];
   }
 
   bool isComplete() {
@@ -70,17 +67,8 @@ class Level {
 
   int calculateScore(int movesUsed, int timeRemaining) {
     int score = targetPetals;
-
-    // Bonus for using fewer moves
-    if (movesUsed < maxMoves) {
-      score += (maxMoves - movesUsed) * 5;
-    }
-
-    // Bonus for time remaining
-    if (timeLimit > 0 && timeRemaining > 0) {
-      score += (timeRemaining ~/ 10);
-    }
-
+    if (movesUsed < maxMoves) score += (maxMoves - movesUsed) * 5;
+    if (timeLimit > 0 && timeRemaining > 0) score += (timeRemaining ~/ 10);
     return score;
   }
 }

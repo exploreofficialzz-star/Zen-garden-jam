@@ -1,5 +1,5 @@
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 class AdManager {
   static final AdManager _instance = AdManager._internal();
@@ -14,31 +14,30 @@ class AdManager {
   InterstitialAd? _interstitialAd;
   RewardedAd? _rewardedAd;
 
-  // FIX: Replaced invalid 'xxxxxxxx' placeholders with official Google test IDs.
-  // These work immediately without an AdMob account.
-  // Replace with your real IDs from the ADMOB secrets when ready for production.
+  // FIX: Replaced invalid 'ca-app-pub-xxxxxxxxxxxxxxxx/yyyyyyyyyy' with
+  // official Google test IDs (split by platform). The AdMob SDK throws a
+  // fatal error when it receives a malformed ad unit ID — this was the
+  // second crash cause on startup. These test IDs work without an AdMob
+  // account and show real test ads. Swap for your real IDs via GitHub secrets.
   static String get bannerAdUnitId {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'ca-app-pub-3940256099942544/6300978111';
-    } else {
-      return 'ca-app-pub-3940256099942544/2934735716';
     }
+    return 'ca-app-pub-3940256099942544/2934735716';
   }
 
   static String get interstitialAdUnitId {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'ca-app-pub-3940256099942544/1033173712';
-    } else {
-      return 'ca-app-pub-3940256099942544/4411468910';
     }
+    return 'ca-app-pub-3940256099942544/4411468910';
   }
 
   static String get rewardedAdUnitId {
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'ca-app-pub-3940256099942544/5224354917';
-    } else {
-      return 'ca-app-pub-3940256099942544/1712485313';
     }
+    return 'ca-app-pub-3940256099942544/1712485313';
   }
 
   Future<void> initialize() async {
@@ -70,9 +69,7 @@ class AdManager {
           _interstitialAd = ad;
           debugPrint('Interstitial Ad loaded');
         },
-        onAdFailedToLoad: (error) {
-          debugPrint('Interstitial Ad failed: $error');
-        },
+        onAdFailedToLoad: (error) => debugPrint('Interstitial Ad failed: $error'),
       ),
     );
   }
@@ -102,9 +99,7 @@ class AdManager {
           _rewardedAd = ad;
           debugPrint('Rewarded Ad loaded');
         },
-        onAdFailedToLoad: (error) {
-          debugPrint('Rewarded Ad failed: $error');
-        },
+        onAdFailedToLoad: (error) => debugPrint('Rewarded Ad failed: $error'),
       ),
     );
   }

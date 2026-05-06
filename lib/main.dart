@@ -9,25 +9,26 @@ import 'package:zen_garden_jam_flutter/screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // FIX: Initialize GameState FIRST and AWAIT it before runApp.
-  // Previously `GameState()..initialize()` was fire-and-forget inside the
-  // Provider create callback — _prefs (late field) was unset when the first
-  // frame tried to read it, causing LateInitializationError crash.
-  final gameState = GameState();
-  await gameState.initialize();
-
-  // Initialize services — wrapped in try/catch so ad/notification failures
-  // never prevent the app from launching.
+  // FIX 1: Initialize AdMob FIRST — must happen before any ad calls.
+  // Wrapped in try/catch so an AdMob failure never prevents the app launching.
   try {
     await AdManager().initialize();
   } catch (e) {
-    debugPrint('AdManager init failed: $e');
+    debugPrint('AdManager init error: $e');
   }
 
+  // FIX 2: Fully AWAIT GameState.initialize() before calling runApp.
+  // Previously `GameState()..initialize()` inside the Provider create: callback
+  // was fire-and-forget. SplashScreen rendered instantly and accessed the `late`
+  // _prefs field before SharedPreferences.getInstance() had returned → LateInitializationError crash.
+  final gameState = GameState();
+  await gameState.initialize();
+
+  // Notifications — non-fatal if it fails
   try {
     await NotificationManager().initialize();
   } catch (e) {
-    debugPrint('NotificationManager init failed: $e');
+    debugPrint('NotificationManager init error: $e');
   }
 
   runApp(ZenGardenJamApp(gameState: gameState));
@@ -42,7 +43,7 @@ class ZenGardenJamApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // FIX: Pass the already-initialised instance instead of creating a new one.
+        // FIX 3: Provide the already-initialised instance, not a fresh one.
         ChangeNotifierProvider<GameState>.value(value: gameState),
       ],
       child: MaterialApp(
